@@ -1,0 +1,81 @@
+<h1>Card#new</h1>
+<p>Find me in app/views/card/new.html.erb</p>
+
+<%= form_tag(pay_card_index_path, method: :post, id: 'charge-form',  name: "inputForm") do %>
+  <label>カード番号</label>
+  <%= text_field_tag "number", "", class: "number", placeholder: "半角" ,maxlength: "16", type: "text", id: "card_number" %>
+  <br/>
+  <label>有効期限</label>
+  <select id="exp_month" name="exp_month" type="text">
+    <option>--</option>
+    <option value="1">01</option>
+    <option value="2">02</option>
+    <option value="3">03</option>
+    <option value="4">04</option>
+    <option value="5">05</option>
+    <option value="6">06</option>
+    <option value="7">07</option>
+    <option value="8">08</option>
+    <option value="9">09</option>
+    <option value="10">10</option>
+    <option value="11">11</option>
+    <option value="12">12</option>
+  </select>
+  <span>月/</span>
+  <select id="exp_year" name="exp_year" type="text">
+    <option>--</option>
+    <option value="2019">19</option>
+    <option value="2020">20</option>
+    <option value="2021">21</option>
+    <option value="2022">22</option>
+    <option value="2023">23</option>
+    <option value="2024">24</option>
+    <option value="2025">25</option>
+    <option value="2026">26</option>
+    <option value="2027">27</option>
+    <option value="2028">28</option>
+    <option value="2029">29</option>
+  </select>
+  <span>年</span>
+  <br/>
+  <label>セキュリテイコード</label>
+  <%= text_field_tag "cvc", "", class: "cvc", placeholder: "カード背面3~4桁の番号", maxlength: "4", id: "cvc" %>
+  <div id="card_token"></div>
+  <%= submit_tag "追加する", id: "token_submit" %>
+<% end %>
+
+<script>
+document.addEventListener(
+    "DOMContentLoaded", e => {
+      if (document.getElementById("token_submit") != null) { //token_submitというidがnullの場合、下記コードを実行しない
+        Payjp.setPublicKey("pk_test_9ba8d03b367e5d87f2efb7fa"); //ここに公開鍵を直書き
+        let btn = document.getElementById("token_submit"); //IDがtoken_submitの場合に取得されます
+        btn.addEventListener("click", e => { //ボタンが押されたときに作動します
+          e.preventDefault(); //ボタンを一旦無効化します
+          let card = {
+            number: document.getElementById("card_number").value,
+            cvc: document.getElementById("cvc").value,
+            exp_month: document.getElementById("exp_month").value,
+            exp_year: document.getElementById("exp_year").value
+          }; //入力されたデータを取得します。
+          Payjp.createToken(card, (status, response) => {
+            if (status === 200) { //成功した場合
+              $("#card_number").removeAttr("name");
+              $("#cvc").removeAttr("name");
+              $("#exp_month").removeAttr("name");
+              $("#exp_year").removeAttr("name"); //データを自サーバにpostしないように削除
+              $("#card_token").append(
+                $('<input type="hidden" name="payjp-token">').val(response.id)
+              ); //取得したトークンを送信できる状態にします
+              document.inputForm.submit();
+              alert("登録が完了しました"); //確認用
+            } else {
+              alert("カード情報が正しくありません。"); //確認用
+            }
+          });
+        });
+      }
+    },
+    false
+  );
+  </script>
